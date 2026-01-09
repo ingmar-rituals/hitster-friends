@@ -1,34 +1,176 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# 🎵 Blind Music Player
 
-## Getting Started
+A Next.js web application that turns your browser into a Spotify-controlled player for playing mystery songs scanned from QR codes.
 
-First, run the development server:
+## Features
+
+- 🔐 Spotify Premium OAuth 2.0 authentication
+- 📱 QR code scanning to identify and play songs
+- 🎧 Spotify Web Playback SDK integration
+- ⏸️ Playback controls (play, pause, skip)
+- 📊 Now playing progress display
+- 🚨 Error handling with modal dialogs
+
+## Prerequisites
+
+- Node.js 16+ and npm
+- Spotify Premium account
+- Spotify Developer application credentials
+
+## Setup
+
+### 1. Create a Spotify Developer Application
+
+1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Create a new application and accept the terms
+3. Copy your **Client ID** and **Client Secret**
+4. Add a Redirect URI: `http://192.168.2.10:3000` (for local development)
+
+### 2. Clone and Install Dependencies
+
+```bash
+cd blind-music-player
+npm install
+```
+
+### 3. Configure Environment Variables
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. Edit `.env.local` and add your Spotify credentials:
+   ```
+   NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_client_id
+   SPOTIFY_CLIENT_SECRET=your_client_secret
+   NEXT_PUBLIC_REDIRECT_URI=http://192.168.2.10:3000
+   ```
+
+### 4. Add Songs to QR Mapping
+
+Edit `src/data/song-id-mapping.json` to add your songs. The format is:
+```json
+{
+  "song01": "spotify_track_id",
+  "song02": "another_spotify_track_id"
+}
+```
+
+To find Spotify Track IDs:
+1. Open a song in Spotify
+2. Right-click → Copy Spotify URI (e.g., `spotify:track:3n3Ppam7vgaVa1iaRUc9Lp`)
+3. Extract the ID after the last colon
+
+### 5. Generate QR Codes
+
+Use any QR code generator to create codes containing the keys from your mapping (e.g., "song01", "song02").
+
+## Running the Application
+
+### Development Mode
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://192.168.2.10:3000](http://192.168.2.10:3000) in your browser.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+### Production Build
 
-## Learn More
+```bash
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## User Flow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+1. **Login**: Click "Login with Spotify" and authorize the application
+2. **Player Ready**: Wait for the Spotify player to be ready (Spotify must be open on another device)
+3. **Scan QR Code**: Click "Scan QR Code" and point your device's camera at a QR code
+4. **Play Song**: The app looks up the track ID and plays it without showing details
+5. **Controls**: Use Pause to pause, Skip to prepare for the next song
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── auth/
+│   │   │   └── callback/
+│   │   │       └── route.ts          # OAuth token exchange
+│   │   └── player/
+│   │       └── route.ts              # Spotify playback control
+│   ├── page.tsx                      # Main application page
+│   └── layout.tsx                    # Root layout
+├── components/
+│   ├── QRScanner.tsx                 # QR code scanner component
+│   ├── ErrorModal.tsx                # Error notification modal
+│   └── NowPlaying.tsx                # Progress and playback status
+├── lib/
+│   └── spotify.ts                    # Spotify utility functions
+├── data/
+│   └── song-id-mapping.json          # Song ID to Spotify track mapping
+├── types/
+│   └── index.ts                      # TypeScript interfaces
+└── styles/
+    └── globals.css                   # Global styles
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Required Spotify Scopes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+The application requests the following Spotify scopes:
+- `streaming` - Control playback
+- `user-read-email` - Read email address
+- `user-read-private` - Read user profile
+- `user-modify-playback-state` - Control playback state
+- `user-read-playback-state` - Read playback state
+
+## Important Notes
+
+⚠️ **Spotify Premium Required**: The Web Playback SDK only works with Spotify Premium accounts.
+
+⚠️ **Active Device**: You must have Spotify open on at least one device (desktop, mobile, or web) for the player to work.
+
+⚠️ **Security**: Never commit `.env.local` to version control. The `SPOTIFY_CLIENT_SECRET` should always remain private.
+
+## Troubleshooting
+
+### "Player not ready" Error
+- Make sure Spotify is open and active on another device
+- Try refreshing the page
+- Check that you have a Spotify Premium account
+
+### "No available devices" Error
+- Open Spotify on your computer, phone, or web player
+- Make sure you're logged into the same Spotify account
+- Check your internet connection
+
+### QR Scanner Not Working
+- Grant camera permissions when prompted
+- Ensure the QR code is clearly visible
+- Try moving closer to or adjusting the angle of the QR code
+
+### Track Not Found Error
+- Verify the Spotify track ID in `song-id-mapping.json`
+- Ensure the track is available in your region
+- Check that the QR code contains the correct mapping key
+
+## Technologies Used
+
+- **Next.js 14+** - React framework with App Router
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS** - Utility-first CSS framework
+- **Spotify Web API** - For playback control
+- **Spotify Web Playback SDK** - Browser-based player
+- **QR Scanner** - QR code detection library
+- **Axios** - HTTP client
+
+## License
+
+MIT
+
+## Support
+
+For issues with Spotify API integration, visit the [Spotify Developer Documentation](https://developer.spotify.com/documentation/web-api/).
