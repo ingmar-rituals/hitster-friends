@@ -251,8 +251,13 @@ function HomeContent() {
 
   const handleScan = async (decodedText: string) => {
     try {
-      // QR code contains the Spotify track ID directly
-      const trackUri = `spotify:track:${decodedText}`;
+      // Extract track ID from full URL (https://open.spotify.com/track/ID?si=...)
+      // or from URI (spotify:track:ID) or handle raw ID
+      const trackIdRegex = /(?:track\/|track:|^)([a-zA-Z0-9]{22})/;
+      const match = decodedText.match(trackIdRegex);
+      const trackId = match ? match[1] : decodedText;
+
+      const trackUri = `spotify:track:${trackId}`;
 
       const response = await fetch('/api/player', {
         method: 'POST',
